@@ -1,2 +1,5 @@
 .venv
 credentials.py
+bronze
+silver
+gold
