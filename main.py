@@ -7,10 +7,7 @@ import re
 import pandas as pd
 import os
 import json
-from nordvpn_connect import initialize_vpn, rotate_VPN, close_vpn_connection
 
-#you have to create a credentials.py first with your username, password for nordvpn
-import credentials
 
 root = os.getcwd()
 bronze_path=os.path.join(root,"bronze")
@@ -20,15 +17,7 @@ gold_path=os.path.join(root,"gold")
 product_data_path=os.path.join(bronze_path,'product_data.csv')
 product_data_availability_path=os.path.join(bronze_path,'product_data_availability.csv')
 
-#proxi credentials
 
-
-settings = initialize_vpn(
-    "Germany",
-    save=True,
-    username=credentials.USERNAME,
-    password=credentials.PASSWORD
-)
 
 #look for the "personalizationengine" POST request
 #a cookie can survive circa 30 mins
