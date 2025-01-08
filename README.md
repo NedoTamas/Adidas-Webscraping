@@ -4,6 +4,11 @@ Hi. I do it because it's fun.
 * Collect Ecommerce webstore data, to track their supply level using their webpage API.  
 * I like shoes, I'm okay with Adidas, but I'm in love with webscraping.
 
+# .py Files
+* **main()** collects and stores the data
+* **memory_handling()** ensures that I have backup after an IP Block
+* **bronze_process()** organizes the collected data
+
 # Plan
 **Getting the data**
 - [x] Scraping the **German Adidas** website
