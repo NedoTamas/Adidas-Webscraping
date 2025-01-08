@@ -7,7 +7,8 @@ import re
 import pandas as pd
 import os
 import json
-from datetime import date 
+from datetime import date
+from memory_handling import *
 
 #Setting up variables
 
@@ -25,6 +26,7 @@ today=date.today()
 product_data_path=os.path.join(bronze_path, str(today)+'_product_data.csv')
 product_data_availability_path=os.path.join(bronze_path, str(today)+'_product_data_availability.csv')
 memory=os.path.join(memory_path, str(today)+'_memory.txt')
+SKU=os.path.join(memory_path, str(today)+'_SKU.txt')
 
 #---memory---
 block_occured=False
@@ -38,8 +40,8 @@ print(product_data_availability_path)
 
 
 #look for the "personalizationengine" POST request
-#a cookie can survive circa 30 mins
-#an ip can survive around 1000 requests for availability
+#a cookie can survive circa 60 mins
+#an ip can survive around 1000 requests for availability, after that you may have to get new cookies, or ip (connecting to a vpn)
 
 
 #---Cookies / Headers from your browser---
@@ -60,58 +62,57 @@ cookies = {
     '__olapicU': '194fc6145839464cb3a8a92f2b8bb16e',
     '_ScCbts': '%5B%5D',
     'x-commerce-next-id': '17a7b974-4e70-4f46-bba0-c6138f386218',
-    'gl-feat-enable': 'CHECKOUT_PAGES_ENABLED',
-    'geo_ip': '2a02:908:952:ae0:7981:9e6:a06f:3bad',
-    'onesite_country': 'DE',
-    'akacd_generic_prod_grayling_adidas': '3913732872~rv=94~id=3336b890b330edab770b061a66e958c6',
-    'akacd_plp_prod_adidas_grayling': '3913732872~rv=68~id=a9762bc9929f43752474b06e398d7c91',
-    'x-session-id': '6844e51b-229e-4575-a00c-e8eb3845c5c8',
-    'wishlist': '%5B%5D',
-    'AMCVS_7ADA401053CCF9130A490D4C%40AdobeOrg': '1',
-    's_cc': 'true',
     'QSI_SI_0evq2NrkQkQaBb7_intercept': 'true',
-    'x-site-locale': 'de_DE',
-    'x-original-host': 'www.adidas.de',
-    'x-environment': 'production',
-    'akacd_pdp_prod_adidas_grayling': '3913733001~rv=86~id=097dffb1c40917fdb98c4bccd5d7220d',
+    'geo_coordinates': 'lat=51.22, long=6.77',
+    'gl-feat-enable': 'CHECKOUT_PAGES_ENABLED',
+    'geo_ip': '2a02:908:952:ae0:9555:feea:d337:c5a6',
+    'onesite_country': 'DE',
+    'AKA_A2': 'A',
+    'akacd_generic_prod_grayling_adidas': '3913810152~rv=58~id=1570e6ece04d1e6cb308b949654224d1',
+    'bm_ss': 'ab8e18ef4e',
+    'akacd_plp_prod_adidas_grayling': '3913810153~rv=64~id=c595ebca0321f4ebb91214de8d9617c4',
+    'x-original-host': 'adidas.co.uk',
+    'x-site-locale': 'en_GB',
+    'x-session-id': 'ea32ecf2-d60d-4e51-86e1-c0f87e2b36c2',
+    'wishlist': '%5B%5D',
+    'bm_lso': 'E8A94B4E6F19CA202772C5677EA6862ABFA8B605ABE9A67069F0CBC7C3D1FFEE~YAAQyPIWAm+2sbeTAQAA1Zv2RgKP1QDK1UWUlawGLkCRqzZYYA7f/QP0yoFtOIsgFkpCPTtXHIqpEF9YeVMDRVmTocpYN2qQRENmh5DMLHoksdO020uBYYn+ej6AlGDqSttouVkCGbOVXQB/8ZTFjr/C80GwoEkOCK1jYx8Y9EupN5Wcsfo/kthWV+XALL7kc1OScotKFwsnL/C/9jFIN3w39qtS9OlUdefs4wSzWVv/9DOwp1sIwUCYGd1PkriP6RkfpFHC/J5Fx0D+BVfm8KyYp5auL/YxgFmWIlaXHKTz2CxJW/OM2mFTp0NtZDRoTuLAm/0MoICA6Ym72DjbVCjCPFRfcFn9L3UMXpmbEXmDeL9ZRTrJ0VLugBhtEbKbs1A81XjaJujO9GFLHjtu/lY7lIfGMzDeiC5FEe3U45hzRlXLDCvLKPZ7thPGN++3ERP8vL3p14t2FYeYHEuTReHd+txigdd1GwvWCJX3NlnlFsKx^1736357356398',
+    'AMCVS_7ADA401053CCF9130A490D4C%40AdobeOrg': '1',
+    'AMCV_7ADA401053CCF9130A490D4C%40AdobeOrg': '-227196251%7CMCIDTS%7C20097%7CMCMID%7C15790907160741417814272843183976764876%7CMCAAMLH-1736615667%7C6%7CMCAAMB-1736962157%7CRKhpRz8krg2tLO6pguXWp5olkAcUniQYPHaMWWgdJ3xzPWQmdj0y%7CMCOPTOUT-1736364557s%7CNONE%7CMCAID%7CNONE',
+    's_cc': 'true',
+    'geo_country': 'DE',
+    'QuantumMetricSessionID': '11189dd934039a402f71e1c758104f7c',
+    'akacd_pdp_prod_adidas_grayling': '3913810162~rv=24~id=411870ec2e76d18251111e6da7a3e0e3',
     'checkedIfOnlineRecentlyViewed': 'true',
     'persistentBasketCount': '0',
     'userBasketCount': '0',
     'pagecontext_cookies': '',
     'pagecontext_secure_cookies': '',
-    's_sess': '%5B%5BB%5D%5D',
-    'QuantumMetricSessionID': 'e1f7ee138d2291cd3f0b1eea95ab0e66',
-    'bm_ss': 'ab8e18ef4e',
-    'ak_bmsc': 'D8D4484297FD7D117252EC73A04910AC~000000000000000000000000000000~YAAQRiTDF0YjeO6TAQAAzNFgQxr4viKE0UaSwbo/ClyjXpkpouFolcrO7nnvnXoKcYxZXfuHcAi7xptF0PC3DtHCyAMFBXn7jk741ISnsg9QQnAOGWg7isunzK1hhg4I35o3I7CMrEW4apFkphJU0VEY5VKwzJ0JQzqHNkd/Ck1h+WaFev1xU9ETx6tXaeXrbyZt7AY77aunU/eNuHQYPLM7Agodzhzg5i2yocBoNiAxOTREGcBb+3Fo9UD6u1AUfHhuk08HoWLQPfEfXbzfsQQztXem4Ixm5sACkg2/J7NcRRNJiGFwaBYLyoKAVxXBfxEz8pXXh6Gv7Tt1Y3sintVxuRWX/cNtMPe7A3DaIIlAlKTuXckdiOGc3QsHtzQ6NhswhXIND0JBZQ==',
-    's_pers': '%20pn%3D4%7C1738872236699%3B%20s_vnum%3D1738368000852%2526vn%253D7%7C1738368000852%3B%20s_invisit%3Dtrue%7C1736299012018%3B',
-    'utag_main': 'v_id:019400604aac00391324492474cc0506f001606700bd0$_sn:15$_se:1%3Bexp-session$_ss:1%3Bexp-session$_st:1736299011555%3Bexp-session$ses_id:1736297211555%3Bexp-session$_pn:1%3Bexp-session$_vpn:1%3Bexp-session$ttdsyncran:1%3Bexp-session$dcsyncran:1%3Bexp-session$dc_visit:1$dc_event:108%3Bexp-session$ab_dc:TEST%3Bexp-1741481211564$_prevpage:PRODUCT%7CSAMBA%20OG%20SCHUH%20(JI2734)%3Bexp-1736300811969',
-    'bm_lso': '9F00459A29C41905B2A3FC3C3FF1463FAEA4BBC3B6BAC1A4EC27261B6A4EF0FF~YAAQRiTDF/8ceO6TAQAAN8FgQwIn1mkCgIDOjHk2CZdi9sYQTG4Lz6laNO2Ot/eqkFMvjEJ2B2BIXPWYoJegHIpX6zSo9KpxDbH4M5NNV7Bh7Q3ManBnXBpJO6oaJYzcbpRrBbtswqqkiT5aAhEIhvU5q6AU6+AUEogBDAZrsGoQHpOVIBHikXoOJWEsk7Jz5hjRs+LHIfsF8iANzx5WB3d5vW3ZYJEcYymVuAhXkdpp6ed6cvRbLbA4f3Rxej+1q5TsuAwO6GQUc5ughA+CCFGrnP95ISv++m4SvIdNkMsvUtLZkcEQv93/OCohtzceaj62dBJEHgzAamzemO9VtB86sn4rS744FUxY+6F7p6cmPiq2mguGeiz7dLutIkO38zmjy4mt2s33vIKcLs/JMmjSj7cnpnsL4uEXBZiLewmlmFv07zhHym5uWD9U5cdk2lvjep4QC7f0evyNwjQ=^1736297212110',
-    '_uetsid': '28722e60cd3211efb75e39c5dcecade1|1jp1rs4|2|fse|0|1833',
-    '_uetvid': 'c85e49c0c32011ef95a8e15267052ca8|9yjkhb|1736297213055|3|1|bat.bing.com/p/insights/c/o',
+    'ak_bmsc': 'F49A2BC4FDEFE083AF23D0A77FF3E200~000000000000000000000000000000~YAAQyPIWAkW6sbeTAQAAqsn2RhqT5DeZeq5tT7U0zwfQ/3tnCliNC3HoCapWUWogIpWjNiDhrJtN0ZU+rF8Jf/vrNJODidgoyalmodhxluvUZ8hezba9ZrDI8lmZ4KTafHIFsyhfbk0zM2Keigaz+W4LwN30JJzj3VKYrNX/u+4td9nIRAp23S3Ek4Ta3mzxd3wuPqqer8AkPs0FKBb3PGN5rNslYxhMC1iKZJxTVLsJd5gJsPWIv486xyX0dmOyatqS6UdrOlleRrK+yy17wg8fc0yhNTzcY3EQxiAWFt33O8ysrxc24FYJCJxMrhD2pOKzQ1i4RvtHxfutbt2Hlj3HJouqNu/CqX/4FNS+GBagYx4AjodmsPOrnC80ukNjpWFGDhhJUZxuItnPbAgSIooWaqTqulvwd8RlHAiUfs8=',
     '_rdt_uuid': '1735173103699.99afae56-e721-436b-b16f-2b2b59fa94c7',
-    'AMCV_7ADA401053CCF9130A490D4C%40AdobeOrg': '-227196251%7CMCIDTS%7C20097%7CMCMID%7C15790907160741417814272843183976764876%7CMCAAMLH-1736615667%7C6%7CMCAAMB-1736902014%7CRKhpRz8krg2tLO6pguXWp5olkAcUniQYPHaMWWgdJ3xzPWQmdj0y%7CMCOPTOUT-1736304414s%7CNONE%7CMCAID%7CNONE',
-    '_scid_r': '0fiVhzQxtikyP_ORqzNgOBONUQNB32mFZit9zA',
-    'geo_country': 'DE',
-    'geo_coordinates': 'lat=51.22, long=6.77',
-    'bm_s': 'YAAQRiTDF7VFeO6TAQAAcDRhQwIg6bkQKlQ44m59H2E13ItEAxRkhh6+TIWnZS/JHI4/Qah99S9AQt5AE8wM0PSC0pDu4Q76zB/oOuSp5J0090etNCLhQfRDITaRKOUci5JNoYAgsDV02AAmKVPHSBWIaAoxY5pkC6spMn6w2RoIzmPgAFiRyWkt7PX57NEzNqsHVofPjyHv3DRviTWGTmkrSqZnrJoI5/W5Pw4+xYv95GMK90sXbtw3ry0Xb8sZmQndAdu8AQfubzyxKF0ovXUrA6ukt3PVtE0S2Z2R9M26rRX+6AUO2mkWtfPoCL5EFUozdeiF1vq2ip8nqnOeRO1F4NI+',
-    'bm_so': '8AB6CBF265CCBE3661E3CFF449388802AAE15F1C252D7F3BFFCBB5B2D52E5615~YAAQRiTDF7ZFeO6TAQAAcDRhQwK5ViEVBqkdC3J+xCOvMYiWMPqptvwu0e6MklvYodc69gO8ZtDvlWXr+R/iDX/dDcxwiuP8nTn/BuKpal1BwuS9BXQgXloQH0xrZ3u6rS456NvbCLWdqWKUZTC1FRlqEZtw4P7h5fHsGAxIB0Ss2SGKMrs4cdz5ITSEbjihQt9TiRRuXwMNhOWIpt5pAn7QeSgpAqd+Pk8UJaE0TrhDe90qghBjM5wfuI0qWRbgSr1HUwck8Dts9DDZwpQ5/NunzlNBGc07BPSS+NiJabGdlDaeYlCOIuMn/ZUcdikj4RtMdk41VsfzOvOe6uRJdpyVYZnl3rz9KSSIj2Pi9qh3eItDRfe0HNbJI0g2iPpEwkwYNNA1JaB1S2xh+ELEa6ScuDjChHaeUvWyKl2HGVFKj64IFQANdSehQTlCCajp8ogFDuBMSK5RxIN+pQc=',
-    'bm_sz': 'BAE36CFE292B68C412D8AACF62EEA433~YAAQRiTDF7dFeO6TAQAAcDRhQxp+gLkRAA1Cx51DGqphoKiJcfCW7miy8kyZAh6ntHJJIUhSUeVealmbMuCbjsMwii3YGibMIKYZJ2CeAo9Dn8x9UQvtv7EvWN+jenofmYFP2QGsOp047sPXU7HyDnHhw+o4vCXnXoWJtWlTU/2Myn8anb24UMgKndur8npiOMH1Ouv2dYy0AVNlw3gC0pZ/IJLaoFScMBUR0hwNU4oUYNM6tzOwym6tvqvLw7YMXfk2+1/wQ6UFZvjnQ8bfEiI856DSkmrlro+svkp8gUgpJ9B9CgaxU5taF++UlMhbrVRj98NAO7vltV2OZ79zwlObYFSzZbdhNp1c7b8vBeb4fXgJiU5Vxcn2+ycV/cRlKfFLtLXjAd5DkaLUGZ0yDcUhPoV5Tg646FWnqZGTdf0EK6K4DIZr42TpvnA4~3225923~3748919',
-    'RT': '"z=1&dm=www.adidas.de&si=4882354e-05d1-4396-80c3-461e58eaff22&ss=m5n6irpv&sl=0&tt=0&bcn=%2F%2F173bf10c.akstat.io%2F&ld=3m6or&hd=qlo"',
-    '_ga_4DGGV4HV95': 'GS1.1.1736297202.17.1.1736297231.31.0.0',
-    'forterToken': 'db8f5bb12e0e4125b006fedf5185a2d0_1736297232135__UDF43_17ck_KJ05AZbSKkU%3D-7565-v2',
-    'forterToken': 'db8f5bb12e0e4125b006fedf5185a2d0_1736297232135__UDF43_17ck_KJ05AZbSKkU%3D-7565-v2',
-    '_abck': '55A4C44F0D37C1B5517B23E960AB4638~-1~YAAQRiTDF5lGeO6TAQAAdzdhQw2WMIlVRkQdGkyKDxmiSGt1hw94km4/KW0BUG0I/mB1r3YgqVjl1Q8kTXeSXlPw6qqHSTvHtx7dNo2U6F5aiducV6GbvTuKErqK0EKPsHWxYEw8XFWJlk/ew8y67tX7StAwuZkHR2czst2AXth6dalCx/Bs+eiXmYmlK7cqakSQVSaIfIkMOwA2OQqRtBJKbMV5w0l7gmo1cVeJ31AFySrQGYPqDrzKMrs5+lTCb9oNkod17YqgfrvACkfH0CX5ByWQi4+Ibm6Qyt70CVSTYL4PKGvaUaJFXkFpBPDlBW4vRtoVxODp5s08oJxoyREjC/PqtL25S1ESe+torVzqKg7sJmhtxDDa2L0WUAdvWRhvmFRweMv8jO6LgRPzwfJiP0UOd6pzADdgwDC/WOt29TLze/8lCAKDIGy6KS2WCyjyTeJev+5AkLbiPwoEERU1VJRYHxny75s4ZVDtXLSxiCu5O7bTD4Ow3JYRV86M/bsxxgnTa2SELchQA7ip1ui9GQ9YDMivONar+WEfFkU9+6hBlQ==~-1~-1~1736294478',
-    'UserSignUpAndSave': '49',
+    'utag_main': 'v_id:019400604aac00391324492474cc0506f001606700bd0$_sn:16$_se:7%3Bexp-session$_ss:0%3Bexp-session$_st:1736359169656%3Bexp-session$ses_id:1736357355042%3Bexp-session$_pn:3%3Bexp-session$_vpn:5%3Bexp-session$ttdsyncran:1%3Bexp-session$dcsyncran:1%3Bexp-session$dc_visit:1$dc_event:113%3Bexp-session$ab_dc:TEST%3Bexp-1741541369662$_prevpage:PRODUCT%7CSL%2072%20OG%20SCHUH%20(IE3425)%3Bexp-1736360970351',
+    's_pers': '%20pn%3D4%7C1738872236699%3B%20s_vnum%3D1738368000852%2526vn%253D8%7C1738368000852%3B%20s_invisit%3Dtrue%7C1736359170542%3B',
+    '_scid_r': '1fiVhzQxtikyP_ORqzNgOBONUQNB32mFZit9wA',
+    '_ga_4DGGV4HV95': 'GS1.1.1736357357.18.1.1736357370.47.0.0',
+    '_uetsid': '28722e60cd3211efb75e39c5dcecade1|1jp1rs4|2|fse|0|1833',
+    '_uetvid': 'c85e49c0c32011ef95a8e15267052ca8|arblxs|1736357372061|2|1|bat.bing.com/p/insights/c/e',
+    'bm_s': 'YAAQyPIWAlC9sbeTAQAA3fH2RgIKizdmmloj/L/jncL7G87MB3HvpwLSnTep4dXfisJbgTHLp/F/cJ77aOW0KPOswXIkO2r/r7TGpaWhoJQ0E62dZmW1uH+zwg6UBBWPLku4sHJ+yx4k1Fpg+TMf0Dtm3lUGhv/cUERi1E7q1PUYfYVcBGQVI6FGcgttgvtgtCL9bJ5wTyD3V5LSkNZgXWjfZamXCQUiStDk6R1hgiRfQ5UCv4lK5O11kGCHkcF2EmOdkfpDiyUrmUVR74k0CYfDlpqeV0Hd3LcTi6o7DEv9TRzksSSuClGy6W6FT2w71kTHDHJOhC6fJ5o+/rn6NR97GVix',
+    'bm_so': 'BF9EB2E2F7D130FB955E5DACD526B9DF325FB2EBE2629001EC589F680CA4F0E1~YAAQyPIWAlG9sbeTAQAA3fH2RgLr+EA+7ANELfEJ6qqNMVOeB4OP1grL27umJf1GAfBnSOYrryk+aFcgd02QjNEoU5JlreCWvD39flJ6iyHWAaRNH+xVqetm5k3ve2D/W9tDuewkubT/+0eT4czTLJYGL+9CRcfKwztjxM0O9ieQ5uGU2nYMA5FgUEkOK9wJZ77aNmHyQQXzY/cGXySlBfQgWVzkf6YYfxVzvuZEH+voz0DR+Eu9ojlaUfcJ8cE1xPE7GJNqtaNcv71XLT2AcDzSZkh/h41NkdA2ZNuISlFsWtEsHu55WFekXQoA4P0N1Do84hTVsxiKuvgcynJB03/DC9cbIBG6Blzj672DDQh2BfwaQhrFQfn/JC7EY69MyZsG/ALBP0uxvU/hM9m9e7/+VLVpDI0C5mtqv1GF2clAKuBcMH/XBA1+ZJOtJCRX/NIXtrF4V9XJdlpMaW3rx0H5W1ZrOSGIsuyCGP2fY6YAgIhW',
+    'bm_sz': 'D5C6D13E22DB7F88AF809C958F1EA446~YAAQyPIWAlK9sbeTAQAA3fH2RhontXKV9ZCOjrDoGx5HEg3r9q11Mrvrc7Hsi3yKOoQnykEMN89x7c66bjSfime93+8zoXqTyOfqJc9jhXxF5TNcOWinqet1M2kZ25AjYWrg5YhgbBhNkdGTzeD+lPeLIIZJfwd4j0OTf0rvwHD/OZblkS46EuvbidP2hJCygMU+eBjiIlXtIIx/ZGqu0DUvo3Tl4mtl/Bi0vl5FNwUejcsbQVOKEH/Bzpw85mmUwVfYV7806ckTNj+9+90Q2Sviy7HoYnYsoOy2ulvpGIAPSPVmz8Lgf+opThWnQKt0SRD/oKs/B5qN8bKDRMf/hXIg+dREX+fST43l+5+WEiZnpyxZcbt3EHL7OZ04JVAAvvc+8xkOGxT7QQ2JW/Skbt6l5csFBq9mF+IDnoTLb6PheD+9W2ol8BjePeYiqiw1H1K8oVbpapaQXxgO+0PK+EYV/U8=~3227971~3425604',
+    'RT': '"z=1&dm=www.adidas.de&si=4882354e-05d1-4396-80c3-461e58eaff22&ss=m5o6c4c4&sl=2&tt=8sz&bcn=%2F%2F02179919.akstat.io%2F&ld=fql&hd=hw2"',
+    'forterToken': 'db8f5bb12e0e4125b006fedf5185a2d0_1736357376682__UDF43_17ck_qsxJsDqQ7FI%3D-1141-v2',
+    'forterToken': 'db8f5bb12e0e4125b006fedf5185a2d0_1736357376682__UDF43_17ck_qsxJsDqQ7FI%3D-1141-v2',
+    '_abck': '55A4C44F0D37C1B5517B23E960AB4638~-1~YAAQyPIWAnW9sbeTAQAA2fP2Rg2raBz0KP2TXxA5n5baOdqr44gMm12iPIK9iGfmQjUsQThQuo1H4pe+LWvz6y6koDaQbB8kaGur7ZonTImHGQiOLMWZuOV8x2Gx28RND/zeQJET5Uo0zBB8//hpTfLeDgENU2UHe7GwBe5qgTnXFvQaDuQkjXcYLyLrR6pZT6d+MLMiulKCK1F/lLidv8TyAi56uw1/Tz4KFSD1kIKWALtIy1yrquP/Ayj7f83cTyjFGT4VGZmYA2zyl3Tpz3zO4lQLylyStHOUWB3vF1f8ovHfiFHNx5eLcFtGAoYJvjsWnIItCMglutFhC5b6ArBhc7ICjyozoKQli4wLogYCmJo7+Px0rvRjn693jBm35lbKzZfHmr6al5bFLmFiVeXHagg2nwUDx+np842qI//R5mjneBA11c/p5ezlcLIVZW09mfXF3IWXAuTIZfTjJN8NMfkVWsIA9U4qEq0nf1iWnFVgRvG41amKxiE3lSnekWoyP7qf1RCccZKbS6YZhwMEuNGglzn8gVLcOvG7F9i7lCf0~-1~-1~1736360955',
+    'UserSignUpAndSave': '51',
 }
 
 headers = {
     'accept': '*/*',
     'accept-language': 'en,en-US;q=0.9',
     'content-type': 'application/json',
-    # 'cookie': 'mt.v=5.023471563.1735173098104; channelcloser=nonpaid; x-browser-id=ef39a6f2-8314-4f82-a0fa-363e49a57267; ab_qm=b; wishlist=%5B%5D; notice_preferences=%5B0%2C1%2C2%5D; _gcl_au=1.1.745756955.1735173104; _ga=GA1.1.417081306.1735173100; _scid=zniVhzQxtikyP_ORqzNgOBONUQNB32mF; _pin_unauth=dWlkPU56ZG1ZbVJpTTJJdFl6QXhaaTAwTldZNUxUazNOMll0WlRKbU9XWmlOakprWWpVNA; QuantumMetricUserID=ce9e74e6acbef12e0916dd37bb958505; newsletterShownOnVisit=true; __olapicU=194fc6145839464cb3a8a92f2b8bb16e; _ScCbts=%5B%5D; x-commerce-next-id=17a7b974-4e70-4f46-bba0-c6138f386218; gl-feat-enable=CHECKOUT_PAGES_ENABLED; geo_ip=2a02:908:952:ae0:7981:9e6:a06f:3bad; onesite_country=DE; akacd_generic_prod_grayling_adidas=3913732872~rv=94~id=3336b890b330edab770b061a66e958c6; akacd_plp_prod_adidas_grayling=3913732872~rv=68~id=a9762bc9929f43752474b06e398d7c91; x-session-id=6844e51b-229e-4575-a00c-e8eb3845c5c8; wishlist=%5B%5D; AMCVS_7ADA401053CCF9130A490D4C%40AdobeOrg=1; s_cc=true; QSI_SI_0evq2NrkQkQaBb7_intercept=true; x-site-locale=de_DE; x-original-host=www.adidas.de; x-environment=production; akacd_pdp_prod_adidas_grayling=3913733001~rv=86~id=097dffb1c40917fdb98c4bccd5d7220d; checkedIfOnlineRecentlyViewed=true; persistentBasketCount=0; userBasketCount=0; pagecontext_cookies=; pagecontext_secure_cookies=; s_sess=%5B%5BB%5D%5D; QuantumMetricSessionID=e1f7ee138d2291cd3f0b1eea95ab0e66; bm_ss=ab8e18ef4e; ak_bmsc=D8D4484297FD7D117252EC73A04910AC~000000000000000000000000000000~YAAQRiTDF0YjeO6TAQAAzNFgQxr4viKE0UaSwbo/ClyjXpkpouFolcrO7nnvnXoKcYxZXfuHcAi7xptF0PC3DtHCyAMFBXn7jk741ISnsg9QQnAOGWg7isunzK1hhg4I35o3I7CMrEW4apFkphJU0VEY5VKwzJ0JQzqHNkd/Ck1h+WaFev1xU9ETx6tXaeXrbyZt7AY77aunU/eNuHQYPLM7Agodzhzg5i2yocBoNiAxOTREGcBb+3Fo9UD6u1AUfHhuk08HoWLQPfEfXbzfsQQztXem4Ixm5sACkg2/J7NcRRNJiGFwaBYLyoKAVxXBfxEz8pXXh6Gv7Tt1Y3sintVxuRWX/cNtMPe7A3DaIIlAlKTuXckdiOGc3QsHtzQ6NhswhXIND0JBZQ==; s_pers=%20pn%3D4%7C1738872236699%3B%20s_vnum%3D1738368000852%2526vn%253D7%7C1738368000852%3B%20s_invisit%3Dtrue%7C1736299012018%3B; utag_main=v_id:019400604aac00391324492474cc0506f001606700bd0$_sn:15$_se:1%3Bexp-session$_ss:1%3Bexp-session$_st:1736299011555%3Bexp-session$ses_id:1736297211555%3Bexp-session$_pn:1%3Bexp-session$_vpn:1%3Bexp-session$ttdsyncran:1%3Bexp-session$dcsyncran:1%3Bexp-session$dc_visit:1$dc_event:108%3Bexp-session$ab_dc:TEST%3Bexp-1741481211564$_prevpage:PRODUCT%7CSAMBA%20OG%20SCHUH%20(JI2734)%3Bexp-1736300811969; bm_lso=9F00459A29C41905B2A3FC3C3FF1463FAEA4BBC3B6BAC1A4EC27261B6A4EF0FF~YAAQRiTDF/8ceO6TAQAAN8FgQwIn1mkCgIDOjHk2CZdi9sYQTG4Lz6laNO2Ot/eqkFMvjEJ2B2BIXPWYoJegHIpX6zSo9KpxDbH4M5NNV7Bh7Q3ManBnXBpJO6oaJYzcbpRrBbtswqqkiT5aAhEIhvU5q6AU6+AUEogBDAZrsGoQHpOVIBHikXoOJWEsk7Jz5hjRs+LHIfsF8iANzx5WB3d5vW3ZYJEcYymVuAhXkdpp6ed6cvRbLbA4f3Rxej+1q5TsuAwO6GQUc5ughA+CCFGrnP95ISv++m4SvIdNkMsvUtLZkcEQv93/OCohtzceaj62dBJEHgzAamzemO9VtB86sn4rS744FUxY+6F7p6cmPiq2mguGeiz7dLutIkO38zmjy4mt2s33vIKcLs/JMmjSj7cnpnsL4uEXBZiLewmlmFv07zhHym5uWD9U5cdk2lvjep4QC7f0evyNwjQ=^1736297212110; _uetsid=28722e60cd3211efb75e39c5dcecade1|1jp1rs4|2|fse|0|1833; _uetvid=c85e49c0c32011ef95a8e15267052ca8|9yjkhb|1736297213055|3|1|bat.bing.com/p/insights/c/o; _rdt_uuid=1735173103699.99afae56-e721-436b-b16f-2b2b59fa94c7; AMCV_7ADA401053CCF9130A490D4C%40AdobeOrg=-227196251%7CMCIDTS%7C20097%7CMCMID%7C15790907160741417814272843183976764876%7CMCAAMLH-1736615667%7C6%7CMCAAMB-1736902014%7CRKhpRz8krg2tLO6pguXWp5olkAcUniQYPHaMWWgdJ3xzPWQmdj0y%7CMCOPTOUT-1736304414s%7CNONE%7CMCAID%7CNONE; _scid_r=0fiVhzQxtikyP_ORqzNgOBONUQNB32mFZit9zA; geo_country=DE; geo_coordinates=lat=51.22, long=6.77; bm_s=YAAQRiTDF7VFeO6TAQAAcDRhQwIg6bkQKlQ44m59H2E13ItEAxRkhh6+TIWnZS/JHI4/Qah99S9AQt5AE8wM0PSC0pDu4Q76zB/oOuSp5J0090etNCLhQfRDITaRKOUci5JNoYAgsDV02AAmKVPHSBWIaAoxY5pkC6spMn6w2RoIzmPgAFiRyWkt7PX57NEzNqsHVofPjyHv3DRviTWGTmkrSqZnrJoI5/W5Pw4+xYv95GMK90sXbtw3ry0Xb8sZmQndAdu8AQfubzyxKF0ovXUrA6ukt3PVtE0S2Z2R9M26rRX+6AUO2mkWtfPoCL5EFUozdeiF1vq2ip8nqnOeRO1F4NI+; bm_so=8AB6CBF265CCBE3661E3CFF449388802AAE15F1C252D7F3BFFCBB5B2D52E5615~YAAQRiTDF7ZFeO6TAQAAcDRhQwK5ViEVBqkdC3J+xCOvMYiWMPqptvwu0e6MklvYodc69gO8ZtDvlWXr+R/iDX/dDcxwiuP8nTn/BuKpal1BwuS9BXQgXloQH0xrZ3u6rS456NvbCLWdqWKUZTC1FRlqEZtw4P7h5fHsGAxIB0Ss2SGKMrs4cdz5ITSEbjihQt9TiRRuXwMNhOWIpt5pAn7QeSgpAqd+Pk8UJaE0TrhDe90qghBjM5wfuI0qWRbgSr1HUwck8Dts9DDZwpQ5/NunzlNBGc07BPSS+NiJabGdlDaeYlCOIuMn/ZUcdikj4RtMdk41VsfzOvOe6uRJdpyVYZnl3rz9KSSIj2Pi9qh3eItDRfe0HNbJI0g2iPpEwkwYNNA1JaB1S2xh+ELEa6ScuDjChHaeUvWyKl2HGVFKj64IFQANdSehQTlCCajp8ogFDuBMSK5RxIN+pQc=; bm_sz=BAE36CFE292B68C412D8AACF62EEA433~YAAQRiTDF7dFeO6TAQAAcDRhQxp+gLkRAA1Cx51DGqphoKiJcfCW7miy8kyZAh6ntHJJIUhSUeVealmbMuCbjsMwii3YGibMIKYZJ2CeAo9Dn8x9UQvtv7EvWN+jenofmYFP2QGsOp047sPXU7HyDnHhw+o4vCXnXoWJtWlTU/2Myn8anb24UMgKndur8npiOMH1Ouv2dYy0AVNlw3gC0pZ/IJLaoFScMBUR0hwNU4oUYNM6tzOwym6tvqvLw7YMXfk2+1/wQ6UFZvjnQ8bfEiI856DSkmrlro+svkp8gUgpJ9B9CgaxU5taF++UlMhbrVRj98NAO7vltV2OZ79zwlObYFSzZbdhNp1c7b8vBeb4fXgJiU5Vxcn2+ycV/cRlKfFLtLXjAd5DkaLUGZ0yDcUhPoV5Tg646FWnqZGTdf0EK6K4DIZr42TpvnA4~3225923~3748919; RT="z=1&dm=www.adidas.de&si=4882354e-05d1-4396-80c3-461e58eaff22&ss=m5n6irpv&sl=0&tt=0&bcn=%2F%2F173bf10c.akstat.io%2F&ld=3m6or&hd=qlo"; _ga_4DGGV4HV95=GS1.1.1736297202.17.1.1736297231.31.0.0; forterToken=db8f5bb12e0e4125b006fedf5185a2d0_1736297232135__UDF43_17ck_KJ05AZbSKkU%3D-7565-v2; forterToken=db8f5bb12e0e4125b006fedf5185a2d0_1736297232135__UDF43_17ck_KJ05AZbSKkU%3D-7565-v2; _abck=55A4C44F0D37C1B5517B23E960AB4638~-1~YAAQRiTDF5lGeO6TAQAAdzdhQw2WMIlVRkQdGkyKDxmiSGt1hw94km4/KW0BUG0I/mB1r3YgqVjl1Q8kTXeSXlPw6qqHSTvHtx7dNo2U6F5aiducV6GbvTuKErqK0EKPsHWxYEw8XFWJlk/ew8y67tX7StAwuZkHR2czst2AXth6dalCx/Bs+eiXmYmlK7cqakSQVSaIfIkMOwA2OQqRtBJKbMV5w0l7gmo1cVeJ31AFySrQGYPqDrzKMrs5+lTCb9oNkod17YqgfrvACkfH0CX5ByWQi4+Ibm6Qyt70CVSTYL4PKGvaUaJFXkFpBPDlBW4vRtoVxODp5s08oJxoyREjC/PqtL25S1ESe+torVzqKg7sJmhtxDDa2L0WUAdvWRhvmFRweMv8jO6LgRPzwfJiP0UOd6pzADdgwDC/WOt29TLze/8lCAKDIGy6KS2WCyjyTeJev+5AkLbiPwoEERU1VJRYHxny75s4ZVDtXLSxiCu5O7bTD4Ow3JYRV86M/bsxxgnTa2SELchQA7ip1ui9GQ9YDMivONar+WEfFkU9+6hBlQ==~-1~-1~1736294478; UserSignUpAndSave=49',
+    # 'cookie': 'mt.v=5.023471563.1735173098104; channelcloser=nonpaid; x-browser-id=ef39a6f2-8314-4f82-a0fa-363e49a57267; ab_qm=b; wishlist=%5B%5D; notice_preferences=%5B0%2C1%2C2%5D; _gcl_au=1.1.745756955.1735173104; _ga=GA1.1.417081306.1735173100; _scid=zniVhzQxtikyP_ORqzNgOBONUQNB32mF; _pin_unauth=dWlkPU56ZG1ZbVJpTTJJdFl6QXhaaTAwTldZNUxUazNOMll0WlRKbU9XWmlOakprWWpVNA; QuantumMetricUserID=ce9e74e6acbef12e0916dd37bb958505; newsletterShownOnVisit=true; __olapicU=194fc6145839464cb3a8a92f2b8bb16e; _ScCbts=%5B%5D; x-commerce-next-id=17a7b974-4e70-4f46-bba0-c6138f386218; QSI_SI_0evq2NrkQkQaBb7_intercept=true; geo_coordinates=lat=51.22, long=6.77; gl-feat-enable=CHECKOUT_PAGES_ENABLED; geo_ip=2a02:908:952:ae0:9555:feea:d337:c5a6; onesite_country=DE; AKA_A2=A; akacd_generic_prod_grayling_adidas=3913810152~rv=58~id=1570e6ece04d1e6cb308b949654224d1; bm_ss=ab8e18ef4e; akacd_plp_prod_adidas_grayling=3913810153~rv=64~id=c595ebca0321f4ebb91214de8d9617c4; x-original-host=adidas.co.uk; x-site-locale=en_GB; x-session-id=ea32ecf2-d60d-4e51-86e1-c0f87e2b36c2; wishlist=%5B%5D; bm_lso=E8A94B4E6F19CA202772C5677EA6862ABFA8B605ABE9A67069F0CBC7C3D1FFEE~YAAQyPIWAm+2sbeTAQAA1Zv2RgKP1QDK1UWUlawGLkCRqzZYYA7f/QP0yoFtOIsgFkpCPTtXHIqpEF9YeVMDRVmTocpYN2qQRENmh5DMLHoksdO020uBYYn+ej6AlGDqSttouVkCGbOVXQB/8ZTFjr/C80GwoEkOCK1jYx8Y9EupN5Wcsfo/kthWV+XALL7kc1OScotKFwsnL/C/9jFIN3w39qtS9OlUdefs4wSzWVv/9DOwp1sIwUCYGd1PkriP6RkfpFHC/J5Fx0D+BVfm8KyYp5auL/YxgFmWIlaXHKTz2CxJW/OM2mFTp0NtZDRoTuLAm/0MoICA6Ym72DjbVCjCPFRfcFn9L3UMXpmbEXmDeL9ZRTrJ0VLugBhtEbKbs1A81XjaJujO9GFLHjtu/lY7lIfGMzDeiC5FEe3U45hzRlXLDCvLKPZ7thPGN++3ERP8vL3p14t2FYeYHEuTReHd+txigdd1GwvWCJX3NlnlFsKx^1736357356398; AMCVS_7ADA401053CCF9130A490D4C%40AdobeOrg=1; AMCV_7ADA401053CCF9130A490D4C%40AdobeOrg=-227196251%7CMCIDTS%7C20097%7CMCMID%7C15790907160741417814272843183976764876%7CMCAAMLH-1736615667%7C6%7CMCAAMB-1736962157%7CRKhpRz8krg2tLO6pguXWp5olkAcUniQYPHaMWWgdJ3xzPWQmdj0y%7CMCOPTOUT-1736364557s%7CNONE%7CMCAID%7CNONE; s_cc=true; geo_country=DE; QuantumMetricSessionID=11189dd934039a402f71e1c758104f7c; akacd_pdp_prod_adidas_grayling=3913810162~rv=24~id=411870ec2e76d18251111e6da7a3e0e3; checkedIfOnlineRecentlyViewed=true; persistentBasketCount=0; userBasketCount=0; pagecontext_cookies=; pagecontext_secure_cookies=; ak_bmsc=F49A2BC4FDEFE083AF23D0A77FF3E200~000000000000000000000000000000~YAAQyPIWAkW6sbeTAQAAqsn2RhqT5DeZeq5tT7U0zwfQ/3tnCliNC3HoCapWUWogIpWjNiDhrJtN0ZU+rF8Jf/vrNJODidgoyalmodhxluvUZ8hezba9ZrDI8lmZ4KTafHIFsyhfbk0zM2Keigaz+W4LwN30JJzj3VKYrNX/u+4td9nIRAp23S3Ek4Ta3mzxd3wuPqqer8AkPs0FKBb3PGN5rNslYxhMC1iKZJxTVLsJd5gJsPWIv486xyX0dmOyatqS6UdrOlleRrK+yy17wg8fc0yhNTzcY3EQxiAWFt33O8ysrxc24FYJCJxMrhD2pOKzQ1i4RvtHxfutbt2Hlj3HJouqNu/CqX/4FNS+GBagYx4AjodmsPOrnC80ukNjpWFGDhhJUZxuItnPbAgSIooWaqTqulvwd8RlHAiUfs8=; _rdt_uuid=1735173103699.99afae56-e721-436b-b16f-2b2b59fa94c7; utag_main=v_id:019400604aac00391324492474cc0506f001606700bd0$_sn:16$_se:7%3Bexp-session$_ss:0%3Bexp-session$_st:1736359169656%3Bexp-session$ses_id:1736357355042%3Bexp-session$_pn:3%3Bexp-session$_vpn:5%3Bexp-session$ttdsyncran:1%3Bexp-session$dcsyncran:1%3Bexp-session$dc_visit:1$dc_event:113%3Bexp-session$ab_dc:TEST%3Bexp-1741541369662$_prevpage:PRODUCT%7CSL%2072%20OG%20SCHUH%20(IE3425)%3Bexp-1736360970351; s_pers=%20pn%3D4%7C1738872236699%3B%20s_vnum%3D1738368000852%2526vn%253D8%7C1738368000852%3B%20s_invisit%3Dtrue%7C1736359170542%3B; _scid_r=1fiVhzQxtikyP_ORqzNgOBONUQNB32mFZit9wA; _ga_4DGGV4HV95=GS1.1.1736357357.18.1.1736357370.47.0.0; _uetsid=28722e60cd3211efb75e39c5dcecade1|1jp1rs4|2|fse|0|1833; _uetvid=c85e49c0c32011ef95a8e15267052ca8|arblxs|1736357372061|2|1|bat.bing.com/p/insights/c/e; bm_s=YAAQyPIWAlC9sbeTAQAA3fH2RgIKizdmmloj/L/jncL7G87MB3HvpwLSnTep4dXfisJbgTHLp/F/cJ77aOW0KPOswXIkO2r/r7TGpaWhoJQ0E62dZmW1uH+zwg6UBBWPLku4sHJ+yx4k1Fpg+TMf0Dtm3lUGhv/cUERi1E7q1PUYfYVcBGQVI6FGcgttgvtgtCL9bJ5wTyD3V5LSkNZgXWjfZamXCQUiStDk6R1hgiRfQ5UCv4lK5O11kGCHkcF2EmOdkfpDiyUrmUVR74k0CYfDlpqeV0Hd3LcTi6o7DEv9TRzksSSuClGy6W6FT2w71kTHDHJOhC6fJ5o+/rn6NR97GVix; bm_so=BF9EB2E2F7D130FB955E5DACD526B9DF325FB2EBE2629001EC589F680CA4F0E1~YAAQyPIWAlG9sbeTAQAA3fH2RgLr+EA+7ANELfEJ6qqNMVOeB4OP1grL27umJf1GAfBnSOYrryk+aFcgd02QjNEoU5JlreCWvD39flJ6iyHWAaRNH+xVqetm5k3ve2D/W9tDuewkubT/+0eT4czTLJYGL+9CRcfKwztjxM0O9ieQ5uGU2nYMA5FgUEkOK9wJZ77aNmHyQQXzY/cGXySlBfQgWVzkf6YYfxVzvuZEH+voz0DR+Eu9ojlaUfcJ8cE1xPE7GJNqtaNcv71XLT2AcDzSZkh/h41NkdA2ZNuISlFsWtEsHu55WFekXQoA4P0N1Do84hTVsxiKuvgcynJB03/DC9cbIBG6Blzj672DDQh2BfwaQhrFQfn/JC7EY69MyZsG/ALBP0uxvU/hM9m9e7/+VLVpDI0C5mtqv1GF2clAKuBcMH/XBA1+ZJOtJCRX/NIXtrF4V9XJdlpMaW3rx0H5W1ZrOSGIsuyCGP2fY6YAgIhW; bm_sz=D5C6D13E22DB7F88AF809C958F1EA446~YAAQyPIWAlK9sbeTAQAA3fH2RhontXKV9ZCOjrDoGx5HEg3r9q11Mrvrc7Hsi3yKOoQnykEMN89x7c66bjSfime93+8zoXqTyOfqJc9jhXxF5TNcOWinqet1M2kZ25AjYWrg5YhgbBhNkdGTzeD+lPeLIIZJfwd4j0OTf0rvwHD/OZblkS46EuvbidP2hJCygMU+eBjiIlXtIIx/ZGqu0DUvo3Tl4mtl/Bi0vl5FNwUejcsbQVOKEH/Bzpw85mmUwVfYV7806ckTNj+9+90Q2Sviy7HoYnYsoOy2ulvpGIAPSPVmz8Lgf+opThWnQKt0SRD/oKs/B5qN8bKDRMf/hXIg+dREX+fST43l+5+WEiZnpyxZcbt3EHL7OZ04JVAAvvc+8xkOGxT7QQ2JW/Skbt6l5csFBq9mF+IDnoTLb6PheD+9W2ol8BjePeYiqiw1H1K8oVbpapaQXxgO+0PK+EYV/U8=~3227971~3425604; RT="z=1&dm=www.adidas.de&si=4882354e-05d1-4396-80c3-461e58eaff22&ss=m5o6c4c4&sl=2&tt=8sz&bcn=%2F%2F02179919.akstat.io%2F&ld=fql&hd=hw2"; forterToken=db8f5bb12e0e4125b006fedf5185a2d0_1736357376682__UDF43_17ck_qsxJsDqQ7FI%3D-1141-v2; forterToken=db8f5bb12e0e4125b006fedf5185a2d0_1736357376682__UDF43_17ck_qsxJsDqQ7FI%3D-1141-v2; _abck=55A4C44F0D37C1B5517B23E960AB4638~-1~YAAQyPIWAnW9sbeTAQAA2fP2Rg2raBz0KP2TXxA5n5baOdqr44gMm12iPIK9iGfmQjUsQThQuo1H4pe+LWvz6y6koDaQbB8kaGur7ZonTImHGQiOLMWZuOV8x2Gx28RND/zeQJET5Uo0zBB8//hpTfLeDgENU2UHe7GwBe5qgTnXFvQaDuQkjXcYLyLrR6pZT6d+MLMiulKCK1F/lLidv8TyAi56uw1/Tz4KFSD1kIKWALtIy1yrquP/Ayj7f83cTyjFGT4VGZmYA2zyl3Tpz3zO4lQLylyStHOUWB3vF1f8ovHfiFHNx5eLcFtGAoYJvjsWnIItCMglutFhC5b6ArBhc7ICjyozoKQli4wLogYCmJo7+Px0rvRjn693jBm35lbKzZfHmr6al5bFLmFiVeXHagg2nwUDx+np842qI//R5mjneBA11c/p5ezlcLIVZW09mfXF3IWXAuTIZfTjJN8NMfkVWsIA9U4qEq0nf1iWnFVgRvG41amKxiE3lSnekWoyP7qf1RCccZKbS6YZhwMEuNGglzn8gVLcOvG7F9i7lCf0~-1~-1~1736360955; UserSignUpAndSave=51',
     'origin': 'https://www.adidas.de',
     'priority': 'u=1, i',
-    'referer': 'https://www.adidas.de/samba-og-schuh/JI2734.html',
+    'referer': 'https://www.adidas.de/sl-72-og-schuh/IE3425.html',
     'sec-ch-ua': '"Google Chrome";v="131", "Chromium";v="131", "Not_A Brand";v="24"',
     'sec-ch-ua-mobile': '?0',
     'sec-ch-ua-platform': '"Windows"',
@@ -119,12 +120,10 @@ headers = {
     'sec-fetch-mode': 'cors',
     'sec-fetch-site': 'same-origin',
     'user-agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36',
-    'x-instana-l': '1,correlationType=web;correlationId=560070afafc52f2',
-    'x-instana-s': '560070afafc52f2',
-    'x-instana-t': '560070afafc52f2',
+    'x-instana-l': '1,correlationType=web;correlationId=bc90a695f5cb916a',
+    'x-instana-s': 'bc90a695f5cb916a',
+    'x-instana-t': 'bc90a695f5cb916a',
 }
-
-
 
 
 category=['sneakers','fussball-schuhe','outdoor-schuhe','running-schuhe','walking-schuhe','fitness_training-schuhe','tennis-schuhe']
@@ -173,10 +172,11 @@ def codes(all_item_code):
     for item in all_item_code:
         item_codes.append(item[-11:-5])
     df = pd.DataFrame(all_item_code)
-
-    #Saving out just the codes to iterate through it later on. It will recreate the file for the ongoing cycle.
-    df.to_csv('raw_codes.csv', index=False)
-    print('raw_code_list generated')
+    
+    #Saving out the codes to have a backup. // !!! Use it later on when improving on the performance
+    
+    df.to_csv(SKU, index=False, mode='a')
+    print('SKU list has been generated')
     return item_codes
 
 
@@ -208,6 +208,8 @@ def details(item_codes, category_name):
                 }
                 i=i+1
                 print(f"{i} {product_info}")
+
+                #Implemented sleep to prevent ip blocks. //  !!! May lower in the future to secure smooth running
                 if i%500==0:
                     time.sleep(randint(100, 150))
 
@@ -234,11 +236,6 @@ def export(product_list):
     print(f"product_data.csv generated in {bronze_path}")
 
 
-#url = f'https://www.adidas.de/api/products/IF9427/availability'
-#response = requests.get(url, cookies=cookies, headers=headers, impersonate="chrome120")
-#soup = BeautifulSoup(response.text, "html.parser")
-#print(soup.prettify)
-
 def availability():
     i=0
 
@@ -263,18 +260,18 @@ def availability():
         response = requests.get(url, cookies=cookies, headers=headers, impersonate="chrome120")
 
         #After 1000 requests we cause the server to block us. To prevent it implement waiting times.
+        #Previous tries: 2min/500r
+        if i%350==0:
+            time.sleep(randint(100, 150))
 
-        #if i%500==0:
-            #time.sleep(randint(100, 150))
 
-
-        #Enable when find a solution for proxy rotation
+        #Enable it when I find a solution for proxy rotation
         #if response.status_code == 403:
             #rotate_VPN(settings)
 
 
         if response.status_code == 200:
-            print(i)
+            print(f'{i}.th item in this cycle \n')
             try:
                 data = json.loads(response.text)
                 variation_list = data.get('variation_list', [])
@@ -303,31 +300,8 @@ def availability():
     df.to_csv(product_data_availability_path, index=False)
     print("Updated the availability.")
 
-def get_last_successful_item():
-    try:
-        with open(memory, "r") as file:
-            lines = file.readlines()
-            for line in reversed(lines):
-                item, status = line.strip().split(',')
-                if status == "success":
-                    return item
-    except FileNotFoundError:
-        return None
-    return None
 
-def update_memory(category_name, status):
-    with open(memory, "a") as file:
-        file.write(f"{category_name},{status}\n")
-
-def memory_decision(block_occured, category_name):
-
-    status = "403_error" if block_occured else "success"
-    update_memory(category_name, status)
-
-    if block_occured:
-        print(f"403 error encountered for {category_name}. Stopping execution.")
         
-
 def main():
     i=0
     last_successful_item = get_last_successful_item()
