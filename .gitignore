@@ -2,11 +2,12 @@
 credentials.py
 bronze/*
 !bronze
+!bronze/README.md
 silver/*
-!silver
+!silver/README.md
 gold/*
-!gold
+!gold/README.md
 shoes_data.csv
 memory_log/*
-!memory_log
+!memory_log/README.md
 __pycache__
