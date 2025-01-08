@@ -3,6 +3,6 @@ credentials.py
 bronze
 silver
 gold
-raw_codes.csv
 shoes_data.csv
 memory_log
+__pycache__
