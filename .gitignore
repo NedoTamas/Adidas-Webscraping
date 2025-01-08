@@ -1,8 +1,12 @@
 .venv
 credentials.py
-bronze
-silver
-gold
+bronze/*
+!bronze
+silver/*
+!silver
+gold/*
+!gold
 shoes_data.csv
-memory_log
+memory_log/*
+!memory_log
 __pycache__
