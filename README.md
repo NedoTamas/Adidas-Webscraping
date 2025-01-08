@@ -4,6 +4,10 @@ Hi. I do it because it's fun.
 * Collect Ecommerce webstore data, to track their supply level using their webpage API.  
 * I like shoes, I'm okay with Adidas, but I'm in love with webscraping.
 
+# Kaggle
+I plan to upload compiled versions of the results for data science projects.  
+Let's see how frequently.  
+[The Kaggle dataset](https://pages.github.com/](https://www.kaggle.com/datasets/tamsnd/adidas-webstore-shoe-data/))
 # .py Files
 * **main()** collects and stores the data
 * **memory_handling()** ensures that I have backup after an IP Block
