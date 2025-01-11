@@ -17,56 +17,82 @@ today=date.today()
 
 #                                       // !!! Readable, but with scaling, change the declarations to be importable from a .py file
 product_data_availability_path=os.path.join(bronze_path, str(today)+'_product_data_availability.csv')
-bronze_final=os.path.join(bronze_path, str(today)+'_bronze_process.csv')
+bronze_final=os.path.join(silver_path, str(today)+'_silver.csv')
+combined_silver=os.path.join(silver_path, 'combined_silver.csv')
+
+
 
 
 file_path = product_data_availability_path
 data = pd.read_csv(file_path)
 
-records = []
-for index, row in data.iterrows():
+
+def bronze_out():
+    records = []
+    for index, row in data.iterrows():
+        
+        name = row.get('name', None)
+        id = row.get('id', None)
+        price = row.get('price', None)
+        category = row.get('category', None)
+        image_url = row.get('image_url', None)
+        color = row.get('color', None)
+        weight = row.get('weight', None)
+        best_for_wear = row.get('best_for_wear', None)
+        gender = row.get('gender', None)
+        datum = row.get('date', None)
+
     
-    name = row.get('name', None)
-    id = row.get('id', None)
-    price = row.get('price', None)
-    category = row.get('category', None)
-    image_url = row.get('image_url', None)
-    color = row.get('color', None)
-    weight = row.get('weight', None)
-    best_for_wear = row.get('best_for_wear', None)
-    gender = row.get('gender', None)
-    datum = row.get('date', None)
-
-   
-    if pd.notna(row['availability']):
-        try:
-            availability_list = json.loads(row['availability'])
-            for size_info in availability_list:
-                record = {
-                    'model_id' : str(id)+str(size_info['size']).strip().replace(" ", "").replace("/", ""),
-                    'name': name,
-                    'id': id,
-                    'price': price,
-                    'category': category,
-                    'color': color,
-                    'weight': float(weight),
-                    'best_for_wear': best_for_wear,
-                    'size': size_info['size'],
-                    'availability': size_info['availability'],
-                    'image_url': image_url,
-                    'gender' : gender
-                    
-                }
-                records.append(record)
-        except json.JSONDecodeError:
-            print(f"Invalid JSON: {index}. line: {row['availability']}")
+        if pd.notna(row['availability']):
+            try:
+                availability_list = json.loads(row['availability'])
+                for size_info in availability_list:
+                    record = {
+                        'model_id' : str(id)+str(size_info['size']).strip().replace(" ", "").replace("/", ""),
+                        'name': name,
+                        'id': id,
+                        'price': price,
+                        'category': category,
+                        'color': color,
+                        'weight': float(weight),
+                        'best_for_wear': best_for_wear,
+                        'size': size_info['size'],
+                        'availability': size_info['availability'],
+                        'image_url': image_url,
+                        'gender' : gender,
+                        'date': datum
+                        
+                    }
+                    records.append(record)
+            except json.JSONDecodeError:
+                print(f"Invalid JSON: {index}. line: {row['availability']}")
 
 
-processed_data = pd.DataFrame(records)
+    processed_data = pd.DataFrame(records)
 
 
 
-processed_data.to_csv(bronze_final, index=False)
+    processed_data.to_csv(bronze_final, index=False)
 
 
-print(f"Processed data has been saved to {bronze_path}")
+    print(f"Processed data has been saved to {silver_path}")
+
+
+
+def append_files():
+    exists = os.path.isfile(bronze_final)
+    #During testing I had to append multiple files at once, but it won't be neccessary once everything runs smoothly.
+    file_list = [
+        bronze_final
+                 ]
+
+    df_list = [pd.read_csv(file) for file in file_list]
+
+    combined_df = pd.concat(df_list, ignore_index=True)
+
+    combined_df.to_csv(combined_silver, index=False, header=not exists)
+
+bronze_out()
+append_files()
+
+    
