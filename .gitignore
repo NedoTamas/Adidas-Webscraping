@@ -11,3 +11,5 @@ shoes_data.csv
 memory_log/*
 !memory_log/README.md
 __pycache__
+.ruff_cache
+shoes.csv
