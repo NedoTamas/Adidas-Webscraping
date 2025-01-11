@@ -28,3 +28,4 @@ Let's see how frequently.
 **Visualization**
 - [ ] Construct a daily refreshing Power BI dashboard
 - [ ] With the data, answer Ecommerce questions
+- [ ] Compare prices across countries
