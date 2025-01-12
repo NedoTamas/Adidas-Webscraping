@@ -8,30 +8,9 @@ import json
 from datetime import date
 from memory_handling import *
 from credentials import headers, cookies 
+from variables import *
+from memory_handling import update_file_paths
 
-# Setting up variables
-
-# ---pathing---
-root = os.getcwd()
-bronze_path = os.path.join(root, "bronze")
-silver_path = os.path.join(root, "silver")
-gold_path = os.path.join(root, "gold")
-memory_path = os.path.join(root, "memory_log")
-
-# ---time---
-today = date.today()
-
-# ---naming the output---
-product_data_path = os.path.join(bronze_path, str(today) + "_product_data.csv")
-product_data_availability_path = os.path.join(
-    bronze_path, str(today) + "_product_data_availability.csv"
-)
-memory = os.path.join(memory_path, str(today) + "_memory.txt")
-SKU = os.path.join(memory_path, str(today) + "_SKU.csv")
-SKU_raw = os.path.join(memory_path, str(today) + "_SKU_raw.csv")
-
-# ---memory---
-block_occured = False
 
 
 print(product_data_path)
@@ -47,15 +26,33 @@ print(product_data_availability_path)
 
 
 
-category = [
-    "sneakers",
-    "fussball-schuhe",
-    "outdoor-schuhe",
-    "running-schuhe",
-    "walking-schuhe",
-    "fitness_training-schuhe",
-    "tennis-schuhe",
-]
+#Dont forget to rename the existing csv files category!!!
+countries = {
+    'DE': {
+        'url': 'https://www.adidas.de/',
+        'categories': [
+            "en/trainers",
+            "en/fussball-schuhe",
+            "en/outdoor-schuhe",
+            "en/running-schuhe",
+            "en/walking-schuhe",
+            "en/fitness_training-schuhe",
+            "en/tennis-schuhe",
+        ]
+    },
+    'UK': {
+        'url': 'https://www.adidas.co.uk/',
+        'categories': [
+            "trainers",
+            "football-shoes",
+            "outdoor-shoes",
+            "running-shoes",
+            "walking-shoes",
+            "gym_training-shoes",
+            "tennis-shoes",
+        ]
+    }
+}
 
 
 # Old searching terms
@@ -63,13 +60,13 @@ category = [
 # Example url: https://www.adidas.de/manner-sneakers
 
 
-def raw_codes(category_name):
+def raw_codes(category_name, country):
     if os.path.isfile(SKU_raw):
         SKU_memory = csv_to_list(SKU_raw, 0, None, None)
         if SKU_memory[-1] == category_name:
             return SKU_memory
     
-    base_url = f"https://www.adidas.de/{category_name}"
+    base_url = f"{country}/{category_name}"
     all_item_code = []
     item_per_page = 48
     a = -item_per_page
@@ -129,7 +126,7 @@ def codes(all_item_code):
     return item_codes
 
 
-def details(item_codes, category_name):
+def details(item_codes, category_name, country, country_code):
     
     if os.path.isfile(SKU):
         item_codes = csv_to_list(SKU, 0, None, None)
@@ -146,7 +143,7 @@ def details(item_codes, category_name):
     product_list = []
 
     for item in item_codes[stored_data:]:
-        url = f"https://www.adidas.de/api/product-list/{item}"
+        url = f"{country}/api/product-list/{item}"
         response = requests.get(url, cookies=cookies, headers=headers)
 
         if response.status_code == 200:
@@ -179,6 +176,7 @@ def details(item_codes, category_name):
                         None,
                     ),
                     "date": str(today),
+                    "country_code" : country_code
                 }
                 i = i + 1
                 print(f"{i}.th item in this cycle\n{product_info}")
@@ -200,26 +198,22 @@ def details(item_codes, category_name):
     return product_list, block_occured
 
 
-def export(product_list, mode):
+def export(product_list, country_code):
     df = pd.DataFrame(product_list)
-
-    # if theres no existing file with this name, it saves the headers, otherwise just the records
     file_exists = os.path.isfile(product_data_path)
-
-    df.to_csv(product_data_path, mode=mode, header=not file_exists, index=False)
-
-    print(f"product_data.csv generated in {bronze_path}")
+    df.to_csv(product_data_path, mode="a", header=not file_exists, index=False)
+    print(f"{country_code}_product_data.csv generated in {bronze_path}")
 
 
-def availability():
+
+def availability(country, country_code):
     i = 0
-
     file_exists = os.path.isfile(product_data_availability_path)
     if file_exists:
         df = pd.read_csv(product_data_availability_path)
     else:
         df = pd.read_csv(product_data_path)
-        print("There is no availability record stored. --- for now ;) ")
+        print(f"There is no availability record stored for {country_code}. --- for now ;)")
 
     if "availability" not in df.columns:
         df["availability"] = None
@@ -230,7 +224,7 @@ def availability():
         for index, row in df.iloc[non_null_count:].iterrows():
             i = i + 1
             id = row["id"]
-            url = f"https://www.adidas.de/api/products/{id}/availability"
+            url = f"{country}/api/products/{id}/availability"
 
             response = requests.get(
                 url, cookies=cookies, headers=headers, impersonate="chrome120"
@@ -280,36 +274,44 @@ def availability():
                 break
         print(f"Total data collected: {i-1}")
         df.to_csv(product_data_availability_path, index=False)
-        print("Updated the availability.")
+        print(f"Updated the availability for {country_code}.")
     except:
         print('Something happened, saving out the gathered data.')
         df.to_csv(product_data_availability_path, index=False)
-        print("Updated the availability.")
+        print(f"Updated the availability for {country_code}.")
+
 
 def main():
-    i = 0
-    last_successful_item = get_last_successful_item()
-    start_index = (
-        category.index(last_successful_item) + 1
-        if last_successful_item in category
-        else 0
-    )
-    for category_name in category[start_index:]:
-        i = i + 1
-        all_item_code = raw_codes(category_name)
-        item_codes = codes(all_item_code)
-        product_list, block_occured = details(item_codes, category_name)
-        memory_decision(block_occured, category_name)
-        if block_occured:
-            break
+    for country_code, country_data in countries.items():
+        print(f"Processing country: {country_code}")
         
+        # Update the file path for each country
+        update_file_paths(country_code)
 
-    if i == 0:
-        print("Today's category data gathering was already successful.")
-    else:
-        print(f"{i} categories data were collected in this cycle.")
+        i = 0
+        last_successful_item = get_last_successful_item(country_code)
+        country_categories = country_data['categories']
+        start_index = (
+            country_categories.index(last_successful_item) + 1
+            if last_successful_item in country_categories
+            else 0
+        )
+        for category_name in country_categories[start_index:]:
+            i += 1
+            all_item_code = raw_codes(category_name, country_data['url'])
+            item_codes = codes(all_item_code)
+            product_list, block_occurred = details(item_codes, category_name, country_data['url'], country_code)
+            memory_decision(block_occurred, category_name, country_code)
+            if block_occurred:
+                break
+            export(product_list, country_code)
 
-    availability()
+        if i == 0:
+            print(f"Today's category data gathering for {country_code} was already successful.")
+        else:
+            print(f"{i} categories data were collected in this cycle for {country_code}")
+
+        availability(country_data['url'], country_code)
 
 
 main()

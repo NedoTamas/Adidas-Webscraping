@@ -3,31 +3,22 @@ import pandas as pd
 import json
 import os
 from datetime import date
-
-#---pathing---
-root = os.getcwd()
-bronze_path=os.path.join(root,"bronze")
-silver_path=os.path.join(root,"silver")
-gold_path=os.path.join(root,"gold")
-memory_path=os.path.join(root,"memory_log")
-
-
-#---time---
-today=date.today()
-
-#                                       // !!! Readable, but with scaling, change the declarations to be importable from a .py file
-product_data_availability_path=os.path.join(bronze_path, str(today)+'_product_data_availability.csv')
-bronze_final=os.path.join(silver_path, str(today)+'_silver.csv')
-combined_silver=os.path.join(silver_path, 'combined_silver.csv')
+from variables import *
+from main import countries
+from memory_handling import update_file_paths
 
 
 
 
-file_path = product_data_availability_path
-data = pd.read_csv(file_path)
 
 
-def bronze_out():
+
+
+
+def bronze_out(country_code):
+    file_path = product_data_availability_path
+
+    data = pd.read_csv(file_path)
     records = []
     for index, row in data.iterrows():
         
@@ -41,6 +32,7 @@ def bronze_out():
         best_for_wear = row.get('best_for_wear', None)
         gender = row.get('gender', None)
         datum = row.get('date', None)
+        country_code = row.get('country_code', None)
 
     
         if pd.notna(row['availability']):
@@ -60,7 +52,8 @@ def bronze_out():
                         'availability': size_info['availability'],
                         'image_url': image_url,
                         'gender' : gender,
-                        'date': datum
+                        'date': datum,
+                        'country_code' : country_code
                         
                     }
                     records.append(record)
@@ -80,11 +73,15 @@ def bronze_out():
 
 
 def append_files():
-    exists = os.path.isfile(bronze_final)
+    file_list=[]
+    exists = os.path.isfile(combined_silver)
     #During testing I had to append multiple files at once, but it won't be neccessary once everything runs smoothly.
-    file_list = [
-        bronze_final
-                 ]
+    for country_code, country in countries.items():
+        # Update the file path for each country
+        update_file_paths(country_code)
+        file_list.append(bronze_final)
+            
+                 
 
     df_list = [pd.read_csv(file) for file in file_list]
 
@@ -92,8 +89,10 @@ def append_files():
 
     combined_df.to_csv(combined_silver, index=False, header=not exists, mode='a')
 
-
-bronze_out()
-append_files()
+def main_bronze():
+    update_file_paths(country_code)
+    for country_code, country in countries.items():
+        bronze_out(country_code)
+    append_files()
 
     

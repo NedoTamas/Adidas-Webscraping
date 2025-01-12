@@ -2,56 +2,35 @@ import os
 from datetime import date
 import pandas as pd
 import time
-
-# ---pathing---
-root = os.getcwd()
-bronze_path = os.path.join(root, "bronze")
-silver_path = os.path.join(root, "silver")
-gold_path = os.path.join(root, "gold")
-memory_path = os.path.join(root, "memory_log")
-
-# ---time---
-today = date.today()
-
-# ---naming the output---
-product_data_path = os.path.join(bronze_path, str(today) + "_product_data.csv")
-product_data_availability_path = os.path.join(
-    bronze_path, str(today) + "_product_data_availability.csv"
-)
-memory = os.path.join(memory_path, str(today) + "_memory.txt")
-SKU = os.path.join(memory_path, str(today) + "_SKU.txt")
-SKU_collected=os.path.join(memory_path, str(today) + "_SKU_collected.txt")
-
-bronze_final = os.path.join(silver_path, '2025-01-04' + "_silver.csv")
-
-# ---memory---
-block_occured = False
+from variables import *
 
 
-def get_last_successful_item():
+
+def get_last_successful_item(country_code):
     try:
         with open(memory, "r") as file:
-            lines = file.readlines()
-            for line in reversed(lines):
-                item, status = line.strip().split(",")
-                if status == "success":
+            for line in reversed(file.readlines()):
+                item, code, status = line.strip().split(",")
+                if status == "success" and code == country_code:
                     return item
     except FileNotFoundError:
         return None
     return None
 
 
-def update_memory(category_name, status):
+
+def update_memory(category_name, country_code, status):
     with open(memory, "a") as file:
-        file.write(f"{category_name},{status}\n")
+        file.write(f"{category_name},{country_code},{status}\n")
 
 
-def memory_decision(block_occured, category_name):
-    status = "403_error" if block_occured else "success"
-    update_memory(category_name, status)
+def memory_decision(block_occurred, category_name, country_code):
+    status = "403_error" if block_occurred else "success"
+    update_memory(category_name, country_code, status)
+    if block_occurred:
+        print(f"403 error encountered for {category_name} in {country_code}. Stopping execution.")
+    return block_occurred
 
-    if block_occured:
-        print(f"403 error encountered for {category_name}. Stopping execution.")
 
 def csv_to_list(file, i, filter=None, column=None):
     if os.path.isfile(file):
@@ -77,3 +56,13 @@ def sleep_with_clock(duration):
         time.sleep(0.1)
     
     print("\nSleep completed.")
+
+def update_file_paths(country_code):
+    global product_data_path, product_data_availability_path, memory, SKU, SKU_raw, bronze_final
+    
+    product_data_path = os.path.join(bronze_path, f"{country_code}_{str(today)}_product_data.csv")
+    product_data_availability_path = os.path.join(bronze_path, f"{country_code}_{str(today)}_product_data_availability.csv")
+    memory = os.path.join(memory_path, f"{country_code}_{str(today)}_memory.txt")
+    SKU = os.path.join(memory_path, f"{country_code}_{str(today)}_SKU.csv")
+    SKU_raw = os.path.join(memory_path, f"{country_code}_{str(today)}_SKU_raw.csv")
+    bronze_final = os.path.join(silver_path, f"{country_code}_{str(today)}_silver.csv")
