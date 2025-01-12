@@ -90,7 +90,8 @@ def append_files():
 
     combined_df = pd.concat(df_list, ignore_index=True)
 
-    combined_df.to_csv(combined_silver, index=False, header=not exists)
+    combined_df.to_csv(combined_silver, index=False, header=not exists, mode='a')
+
 
 bronze_out()
 append_files()
