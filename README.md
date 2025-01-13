@@ -17,7 +17,7 @@ Let's see how frequently.
 **Getting the data**
 - [x] Scraping the **German Adidas** website
 - [ ] Figuring out how to stay undetectable
-- [ ] Be able to scrape multiple countries data
+- [x] Be able to scrape multiple countries data
 
 **Building the pipeline**
 - [x] Store the data locally **(SQL Server)**
