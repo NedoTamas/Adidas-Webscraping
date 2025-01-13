@@ -8,61 +8,12 @@ import json
 from datetime import date
 from memory_handling import *
 from credentials import headers, cookies 
-from variables import *
-from memory_handling import update_file_paths
+from variables import countries
+import multiprocessing
 
-
-
-print(product_data_path)
-print(product_data_availability_path)
-
-
-# look for the "personalizationengine" POST request
-# a cookie can survive circa 60 mins
-# an ip can survive around 1000 requests for availability, after that you may have to get new cookies, or ip (connecting to a vpn)
-
-
-#                                               ---Cookies / Headers from your browser---
-
-
-
-#Dont forget to rename the existing csv files category!!!
-countries = {
-    'DE': {
-        'url': 'https://www.adidas.de/',
-        'categories': [
-            "en/trainers",
-            "en/fussball-schuhe",
-            "en/outdoor-schuhe",
-            "en/running-schuhe",
-            "en/walking-schuhe",
-            "en/fitness_training-schuhe",
-            "en/tennis-schuhe",
-        ]
-    },
-    'UK': {
-        'url': 'https://www.adidas.co.uk/',
-        'categories': [
-            "trainers",
-            "football-shoes",
-            "outdoor-shoes",
-            "running-shoes",
-            "walking-shoes",
-            "gym_training-shoes",
-            "tennis-shoes",
-        ]
-    }
-}
-
-
-# Old searching terms
-# category=['manner-sneakers','frauen-sneakers','jungen-sneakers','manner-fitness_training-schuhe','manner-fussball-schuhe','manner-running-schuhe']
-# Example url: https://www.adidas.de/manner-sneakers
-
-
-def raw_codes(category_name, country):
-    if os.path.isfile(SKU_raw):
-        SKU_memory = csv_to_list(SKU_raw, 0, None, None)
+def raw_codes(category_name, country, paths):
+    if os.path.isfile(paths['SKU_raw']):
+        SKU_memory = csv_to_list(paths['SKU_raw'], 0, None, None)
         if SKU_memory[-1] == category_name:
             return SKU_memory
     
@@ -96,48 +47,35 @@ def raw_codes(category_name, country):
         except Exception as e:
             print(f"An error has occurred: {e}")
             break
-
           
     all_item_code.append(category_name)
-    df=pd.DataFrame(all_item_code)
-    df.to_csv(SKU_raw, index=False, mode="w", header=None)
+    df = pd.DataFrame(all_item_code)
+    df.to_csv(paths['SKU_raw'], index=False, mode="w", header=None)
     return all_item_code
 
-def codes(all_item_code):
-    if os.path.isfile(SKU):
-        SKU_memory=csv_to_list(SKU, 0, None, None)
-        if SKU_memory[-1]==2:
-            item_codes=SKU_memory[:-1]
-            return item_codes
+def codes(all_item_code, paths):
+    if os.path.isfile(paths['SKU_list']):
+        SKU_memory = csv_to_list(paths['SKU_list'], 0, None, None)
+        if SKU_memory[-1] == 2:
+            return SKU_memory[:-1]
 
-    item_codes = []
-    for item in all_item_code[:-1]:
-            
-            item_codes.append(str(item)[-11:-5])
-    
-
-        # Saving out the codes to have a backup.                     // !!! Use it later to improve on the performance
+    item_codes = [str(item)[-11:-5] for item in all_item_code[:-1]]
     item_codes.append(2)
     df = pd.DataFrame(item_codes)
-    df.to_csv(SKU, index=False, mode="w", header=None)
+    df.to_csv(paths['SKU_list'], index=False, mode="w", header=None)
     print("SKU list has been generated")
-        
-    item_codes=item_codes[:-1]
-    return item_codes
-
-
-def details(item_codes, category_name, country, country_code):
     
-    if os.path.isfile(SKU):
-        item_codes = csv_to_list(SKU, 0, None, None)
-        item_codes=item_codes[:-1]
-    block_occured = False
+    return item_codes[:-1]
+
+def details(item_codes, category_name, country, country_code, paths):
+    if os.path.isfile(paths['SKU_list']):
+        item_codes = csv_to_list(paths['SKU_list'], 0, None, None)[:-1]
+    block_occurred = False
     i = 0
     
-    if os.path.isfile(product_data_path):
-        stored_data = csv_to_list(product_data_path, 1, category_name, column=3)
-        if stored_data is not None:
-            stored_data = len(stored_data)
+    if os.path.isfile(paths['product_data_path']):
+        stored_data = csv_to_list(paths['product_data_path'], 1, category_name, column=3)
+        stored_data = len(stored_data) if stored_data else 0
     else:
         stored_data = 0
     product_list = []
@@ -149,39 +87,23 @@ def details(item_codes, category_name, country, country_code):
         if response.status_code == 200:
             data = response.json()
             if data and isinstance(data, list) and len(data) > 0:
-                product_data = data[0]  # Access the first item in the list
+                product_data = data[0]
                 product_info = {
-                    "name": product_data.get("name", None),
-                    "id": product_data.get("id", None),
-                    "price": product_data.get("pricing_information", {}).get(
-                        "currentPrice", None
-                    ),
+                    "name": product_data.get("name"),
+                    "id": product_data.get("id"),
+                    "price": product_data.get("pricing_information", {}).get("currentPrice"),
                     "category": category_name,
-                    "image_url": product_data.get("view_list", [{}])[0].get(
-                        "image_url", None
-                    ),
-                    "color": product_data.get("attribute_list", {}).get("color", None),
-                    "weight": product_data.get("attribute_list", {}).get(
-                        "weight", None
-                    ),
-                    "gender": product_data.get("attribute_list", {}).get(
-                        "gender", None
-                    ),
-                    "best_for_wear": next(
-                        iter(
-                            product_data.get("attribute_list", {}).get(
-                                "best_for_ids", []
-                            )
-                        ),
-                        None,
-                    ),
-                    "date": str(today),
-                    "country_code" : country_code
+                    "image_url": product_data.get("view_list", [{}])[0].get("image_url"),
+                    "color": product_data.get("attribute_list", {}).get("color"),
+                    "weight": product_data.get("attribute_list", {}).get("weight"),
+                    "gender": product_data.get("attribute_list", {}).get("gender"),
+                    "best_for_wear": next(iter(product_data.get("attribute_list", {}).get("best_for_ids", [])), None),
+                    "date": str(date.today()),
+                    "country_code": country_code
                 }
-                i = i + 1
-                print(f"{i}.th item in this cycle\n{product_info}")
+                i += 1
+                print(f"{i}th item in this cycle\n{product_info}")
 
-                # Implemented sleep to prevent ip blocks. //             !!! May lower in the future to secure smooth running
                 if i % 500 == 0:
                     time.sleep(randint(100, 150))
 
@@ -191,28 +113,24 @@ def details(item_codes, category_name, country, country_code):
         else:
             print(f"Failed to retrieve data for item {item}: {response.status_code}")
             if response.status_code == 403:
-                block_occured = True
-                export(product_list, mode='a')
+                block_occurred = True
+                export(product_list, country_code, paths)
                 break
-    export(product_list, mode='a')
-    return product_list, block_occured
+    return product_list, block_occurred
 
-
-def export(product_list, country_code):
+def export(product_list, country_code, paths):
     df = pd.DataFrame(product_list)
-    file_exists = os.path.isfile(product_data_path)
-    df.to_csv(product_data_path, mode="a", header=not file_exists, index=False)
-    print(f"{country_code}_product_data.csv generated in {bronze_path}")
+    file_exists = os.path.isfile(paths['product_data_path'])
+    df.to_csv(paths['product_data_path'], mode="a", header=not file_exists, index=False)
+    print(f"{country_code}_product_data.csv generated in {paths['product_data_path']}")
 
-
-
-def availability(country, country_code):
+def availability(country, country_code, paths):
     i = 0
-    file_exists = os.path.isfile(product_data_availability_path)
+    file_exists = os.path.isfile(paths['product_data_availability_path'])
     if file_exists:
-        df = pd.read_csv(product_data_availability_path)
+        df = pd.read_csv(paths['product_data_availability_path'])
     else:
-        df = pd.read_csv(product_data_path)
+        df = pd.read_csv(paths['product_data_path'])
         print(f"There is no availability record stored for {country_code}. --- for now ;)")
 
     if "availability" not in df.columns:
@@ -222,43 +140,27 @@ def availability(country, country_code):
     print(f"Number of non-null cells in 'availability' column: {non_null_count}")
     try:
         for index, row in df.iloc[non_null_count:].iterrows():
-            i = i + 1
+            i += 1
             id = row["id"]
             url = f"{country}/api/products/{id}/availability"
 
-            response = requests.get(
-                url, cookies=cookies, headers=headers, impersonate="chrome120"
-            )
+            response = requests.get(url, cookies=cookies, headers=headers, impersonate="chrome120")
 
-            # After 1000 requests we cause the server to block us. To prevent it implement waiting times.
-            # Currently I have to reset my ip manually (connecting to a vpn, and disconnecting)
-            # Previous tries: 2min/500r, 2min/350, 10m/700r, 20m/700r, 
-            # 40m/700r-works->2838 requests, 
-            if i % 700 == 0:
-               sleep_with_clock(randint(2401,2420))
-
-                # Enable it when I find a solution for proxy rotation
-                # if response.status_code == 403:
-                # rotate_VPN(settings)
+            if i % 1 == 0:
+                    time.sleep(randint(12, 13))
 
             if response.status_code == 200:
-                print(f"{i}.th item in this cycle\n")
+                print(f"{i}th item in this cycle\n")
                 try:
                     data = json.loads(response.text)
                     variation_list = data.get("variation_list", [])
 
                     if variation_list:
-                        availability_data = []
-                        for variation in variation_list:
-                            availability_data.append(
-                                {
-                                    "size": variation["size"],
-                                    "availability": variation["availability"],
-                                }
-                            )
-                        df.at[index, "availability"] = json.dumps(
-                            availability_data
-                        )  # Store as JSON string
+                        availability_data = [
+                            {"size": variation["size"], "availability": variation["availability"]}
+                            for variation in variation_list
+                        ]
+                        df.at[index, "availability"] = json.dumps(availability_data)
                         print(f"Data found for {id}")
                     else:
                         print(f"No variation list found for product {id}")
@@ -267,51 +169,59 @@ def availability(country, country_code):
                 except KeyError as e:
                     print(f"Unexpected response structure for product {id}: {e}")
             else:
-                print(
-                    f"Failed to retrieve data for item {id}. response code: {response.status_code}"
-                )
-                print("The script is quiting.")
+                print(f"Failed to retrieve data for item {id}. response code: {response.status_code}")
+                print("The script is quitting.")
                 break
         print(f"Total data collected: {i-1}")
-        df.to_csv(product_data_availability_path, index=False)
+        df.to_csv(paths['product_data_availability_path'], index=False)
         print(f"Updated the availability for {country_code}.")
     except:
         print('Something happened, saving out the gathered data.')
-        df.to_csv(product_data_availability_path, index=False)
+        df.to_csv(paths['product_data_availability_path'], index=False)
         print(f"Updated the availability for {country_code}.")
 
+def scrape_country(country_code, country_data):
+    print(f"Processing country: {country_code}")
+    
+    paths = update_file_paths(country_code)
+
+    i = 0
+    last_successful_item = get_last_successful_item(country_code)
+    country_categories = country_data['categories']
+    start_index = (
+        country_categories.index(last_successful_item) + 1
+        if last_successful_item in country_categories
+        else 0
+    )
+    for category_name in country_categories[start_index:]:
+        i += 1
+        all_item_code = raw_codes(category_name, country_data['url'], paths)
+        item_codes = codes(all_item_code, paths)
+        product_list, block_occurred = details(item_codes, category_name, country_data['url'], country_code, paths)
+        memory_decision(block_occurred, category_name, country_code)
+        if block_occurred:
+            break
+        export(product_list, country_code, paths)
+
+    if i == 0:
+        print(f"Today's category data gathering for {country_code} was already successful.")
+    else:
+        print(f"{i} categories data were collected in this cycle for {country_code}")
+
+    availability(country_data['url'], country_code, paths)
 
 def main():
+    processes = []
+    
     for country_code, country_data in countries.items():
-        print(f"Processing country: {country_code}")
-        
-        # Update the file path for each country
-        update_file_paths(country_code)
+        process = multiprocessing.Process(target=scrape_country, args=(country_code, country_data))
+        processes.append(process)
+        process.start()
 
-        i = 0
-        last_successful_item = get_last_successful_item(country_code)
-        country_categories = country_data['categories']
-        start_index = (
-            country_categories.index(last_successful_item) + 1
-            if last_successful_item in country_categories
-            else 0
-        )
-        for category_name in country_categories[start_index:]:
-            i += 1
-            all_item_code = raw_codes(category_name, country_data['url'])
-            item_codes = codes(all_item_code)
-            product_list, block_occurred = details(item_codes, category_name, country_data['url'], country_code)
-            memory_decision(block_occurred, category_name, country_code)
-            if block_occurred:
-                break
-            export(product_list, country_code)
+    for process in processes:
+        process.join()
 
-        if i == 0:
-            print(f"Today's category data gathering for {country_code} was already successful.")
-        else:
-            print(f"{i} categories data were collected in this cycle for {country_code}")
+    print("Scraping completed for all countries.")
 
-        availability(country_data['url'], country_code)
-
-
-main()
+if __name__ == "__main__":
+    main()

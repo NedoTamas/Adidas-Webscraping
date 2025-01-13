@@ -27,13 +27,66 @@ combined_silver=os.path.join(silver_path, 'combined_silver.csv')
 
 # ---memory---
 memory = os.path.join(memory_path, str(today) + "_memory.txt")
-SKU = os.path.join(memory_path, str(today) + "_SKU.csv")
+SKU_list = os.path.join(memory_path, str(today) + "_SKU.csv")
 SKU_raw = os.path.join(memory_path, str(today) + "_SKU_raw.csv")
 block_occured = False
 SKU_collected=os.path.join(memory_path, str(today) + "_SKU_collected.txt")
 
 
-#                                       // !!! Readable, but with scaling, change the declarations to be importable from a .py file
+#Dont forget to rename the existing csv files category!!!
+
+
+#If the category is non existent, the program goes into an infinite loop. Find an error handling for that.
+countries = {
+    'DE': {#Done
+        'url': 'https://www.adidas.de/',
+        'categories': [
+            "en/trainers",
+            "en/football-shoes",
+            "en/outdoor-shoes",
+            "en/running-shoes",
+            "en/walking-shoes",
+            "en/gym_training-shoes",
+            "en/tennis-shoes",
+        ]
+    },
+    'UK': {#Done
+        'url': 'https://www.adidas.co.uk/',
+        'categories': [
+            "trainers",
+            "football-shoes",
+            "outdoor-shoes",
+            "running-shoes",
+            "walking-shoes",
+            "gym_training-shoes",
+            "tennis-shoes",
+        ]
+    },
+    'BE':{#Done
+        'url': 'https://www.adidas.be/',
+        'categories': [
+            "en/trainers",
+            "en/football-shoes",
+            "en/outdoor-shoes",
+            "en/running-shoes",
+            "en/walking-shoes",
+            "en/gym_training-shoes",
+            "en/tennis-shoes",
+        ]
+    },
+    'US':{#Done
+        'url': 'https://www.adidas.com/',
+        'categories': [
+            "us/athletic_sneakers",
+            "us/soccer-shoes",
+            "us/hiking-shoes",
+            "us/running-shoes",
+            "us/walking-shoes",
+            "us/workout-shoes",
+            "us/tennis-shoes",
+        ]
+    }
+}
 
 
 

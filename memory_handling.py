@@ -6,9 +6,20 @@ from variables import *
 
 
 
+def update_file_paths(country_code):
+    paths = {}
+    paths['product_data_path'] = os.path.join(bronze_path, f"{country_code}_{str(today)}_product_data.csv")
+    paths['product_data_availability_path'] = os.path.join(bronze_path, f"{country_code}_{str(today)}_product_data_availability.csv")
+    paths['memory'] = os.path.join(memory_path, f"{country_code}_{str(today)}_memory.txt")
+    paths['SKU_list'] = os.path.join(memory_path, f"{country_code}_{str(today)}_SKU.csv")
+    paths['SKU_raw'] = os.path.join(memory_path, f"{country_code}_{str(today)}_SKU_raw.csv")
+    paths['bronze_final'] = os.path.join(silver_path, f"{country_code}_{str(today)}_silver.csv")
+    return paths
+
 def get_last_successful_item(country_code):
+    paths = update_file_paths(country_code)
     try:
-        with open(memory, "r") as file:
+        with open(paths['memory'], "r") as file:
             for line in reversed(file.readlines()):
                 item, code, status = line.strip().split(",")
                 if status == "success" and code == country_code:
@@ -17,12 +28,10 @@ def get_last_successful_item(country_code):
         return None
     return None
 
-
-
 def update_memory(category_name, country_code, status):
-    with open(memory, "a") as file:
+    paths = update_file_paths(country_code)
+    with open(paths['memory'], "a") as file:
         file.write(f"{category_name},{country_code},{status}\n")
-
 
 def memory_decision(block_occurred, category_name, country_code):
     status = "403_error" if block_occurred else "success"
@@ -31,19 +40,21 @@ def memory_decision(block_occurred, category_name, country_code):
         print(f"403 error encountered for {category_name} in {country_code}. Stopping execution.")
     return block_occurred
 
-
 def csv_to_list(file, i, filter=None, column=None):
     if os.path.isfile(file):
         df = pd.read_csv(file, header=None)
         if filter is None and column is None:
-            result_list = df[i].tolist()
+            return df[i].tolist()
         elif filter is not None and column is not None:
-            result_list = df[df[column] == filter][i].tolist()
+            if column not in df.columns:
+                print(f"Warning: Column {column} not found. Available columns are: {df.columns}")
+                return []
+            return df[df[column] == filter][i].tolist()
         else:
             raise ValueError("Both filter and column must be provided or both must be None")
-        return result_list
     else:
-        print('Theres no such file')
+        print(f"File not found: {file}")
+        return []
 
 def sleep_with_clock(duration):
     start_time = time.time()
@@ -56,13 +67,3 @@ def sleep_with_clock(duration):
         time.sleep(0.1)
     
     print("\nSleep completed.")
-
-def update_file_paths(country_code):
-    global product_data_path, product_data_availability_path, memory, SKU, SKU_raw, bronze_final
-    
-    product_data_path = os.path.join(bronze_path, f"{country_code}_{str(today)}_product_data.csv")
-    product_data_availability_path = os.path.join(bronze_path, f"{country_code}_{str(today)}_product_data_availability.csv")
-    memory = os.path.join(memory_path, f"{country_code}_{str(today)}_memory.txt")
-    SKU = os.path.join(memory_path, f"{country_code}_{str(today)}_SKU.csv")
-    SKU_raw = os.path.join(memory_path, f"{country_code}_{str(today)}_SKU_raw.csv")
-    bronze_final = os.path.join(silver_path, f"{country_code}_{str(today)}_silver.csv")
