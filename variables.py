@@ -33,12 +33,9 @@ block_occured = False
 SKU_collected=os.path.join(memory_path, str(today) + "_SKU_collected.txt")
 
 
-#Dont forget to rename the existing csv files category!!!
-
-
 #If the category is non existent, the program goes into an infinite loop. Find an error handling for that.
 countries = {
-    'DE': {#Done
+    'DE': {
         'url': 'https://www.adidas.de/',
         'categories': [
             "en/trainers",
@@ -50,7 +47,7 @@ countries = {
             "en/tennis-shoes",
         ]
     },
-    'UK': {#Done
+    'UK': {
         'url': 'https://www.adidas.co.uk/',
         'categories': [
             "trainers",
@@ -62,7 +59,7 @@ countries = {
             "tennis-shoes",
         ]
     },
-    'BE':{#Done
+    'BE':{
         'url': 'https://www.adidas.be/',
         'categories': [
             "en/trainers",
@@ -74,7 +71,7 @@ countries = {
             "en/tennis-shoes",
         ]
     },
-    'US':{#Done
+    'US':{
         'url': 'https://www.adidas.com/',
         'categories': [
             "us/athletic_sneakers",
@@ -86,7 +83,7 @@ countries = {
             "us/tennis-shoes",
         ]
     }
-}
+ }
 
 
 

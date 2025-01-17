@@ -16,7 +16,8 @@ from memory_handling import update_file_paths
 
 
 def bronze_out(country_code):
-    file_path = product_data_availability_path
+    paths = update_file_paths(country_code)
+    file_path = paths['product_data_availability_path']
 
     data = pd.read_csv(file_path)
     records = []
@@ -40,11 +41,11 @@ def bronze_out(country_code):
                 availability_list = json.loads(row['availability'])
                 for size_info in availability_list:
                     record = {
-                        'model_id' : str(id)+str(size_info['size']).strip().replace(" ", "").replace("/", ""),
+                        #Not working cuz of US :) 'model_id' : str(id)+str(size_info['size']).strip().replace(" ", "").replace("/", ""),
                         'name': name,
                         'id': id,
                         'price': price,
-                        'category': category,
+                        'category': str(category).lstrip('en/').lstrip('us/'),
                         'color': color,
                         'weight': float(weight),
                         'best_for_wear': best_for_wear,
@@ -65,34 +66,19 @@ def bronze_out(country_code):
 
 
 
-    processed_data.to_csv(bronze_final, index=False)
+    processed_data.to_csv(paths['bronze_final'], index=False)
 
 
     print(f"Processed data has been saved to {silver_path}")
 
 
 
-def append_files():
-    file_list=[]
-    exists = os.path.isfile(combined_silver)
-    #During testing I had to append multiple files at once, but it won't be neccessary once everything runs smoothly.
-    for country_code, country in countries.items():
-        # Update the file path for each country
-        update_file_paths(country_code)
-        file_list.append(bronze_final)
-            
-                 
 
-    df_list = [pd.read_csv(file) for file in file_list]
 
-    combined_df = pd.concat(df_list, ignore_index=True)
 
-    combined_df.to_csv(combined_silver, index=False, header=not exists, mode='a')
 
-def main_bronze():
-    update_file_paths(country_code)
-    for country_code, country in countries.items():
-        bronze_out(country_code)
-    append_files()
+bronze_out()
+
+
 
     
